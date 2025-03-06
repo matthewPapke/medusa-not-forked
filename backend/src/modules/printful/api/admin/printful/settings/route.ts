@@ -22,10 +22,9 @@ export async function POST(
   }
 
   try {
-    // Use explicit any type to avoid TypeScript errors
-    const body = req.body as any;
-    const doSyncProducts = body.products !== false; // Default to true
-    const doSyncInventory = body.inventory !== false; // Default to true
+    // Access properties directly with defaults
+    const doSyncProducts = typeof req.body.products !== 'undefined' ? req.body.products : true;
+    const doSyncInventory = typeof req.body.inventory !== 'undefined' ? req.body.inventory : true;
     
     const results: Record<string, any> = {};
     
