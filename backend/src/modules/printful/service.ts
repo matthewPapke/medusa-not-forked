@@ -19,7 +19,7 @@ type InjectedDependencies = {
   [Modules.ORDER]: IOrderModuleService;
 };
 
-export class PrintfulService {
+class PrintfulService {
   static identifier = 'printful';  
 
   protected readonly logger_: Logger;
@@ -488,3 +488,5 @@ export class PrintfulService {
     };
   }
 }
+
+export default PrintfulService
