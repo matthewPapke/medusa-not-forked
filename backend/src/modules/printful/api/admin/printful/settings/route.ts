@@ -1,48 +1,17 @@
+// src/modules/printful/api/admin/printful/settings/route.ts
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
 import PrintfulService from "../../../../service";
 
-/**
- * Get Printful integration settings
- */
-export async function GET(
-  req: MedusaRequest,
-  res: MedusaResponse
-): Promise<void> {
-  const printfulService: PrintfulService = req.scope.resolve("printful-service");
-
-  const isInitialized = printfulService.isReady();
-
-  try {
-    // Get store info if service is initialized
-    let storeInfo = null;
-    if (isInitialized) {
-      storeInfo = await printfulService.getStoreInfo();
-    }
-
-    res.status(200).json({
-      success: true,
-      data: {
-        initialized: isInitialized,
-        store: storeInfo,
-        config: {
-          syncInterval: process.env.PRINTFUL_AUTO_SYNC_INTERVAL || "3600000",
-          webhookConfigured: !!process.env.PRINTFUL_WEBHOOK_SECRET
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: `Error retrieving Printful settings: ${error.message}`
-    });
-  }
+// Add this interface to properly type the request body
+interface SettingsRequestBody {
+  apiKey: string;
 }
 
 /**
  * Update Printful integration settings
  */
 export async function POST(
-  req: MedusaRequest,
+  req: MedusaRequest<{}, {}, SettingsRequestBody>, // Properly typed request
   res: MedusaResponse
 ): Promise<void> {
   const printfulService: PrintfulService = req.scope.resolve("printful-service");

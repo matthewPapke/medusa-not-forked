@@ -2,7 +2,7 @@ import { Logger } from '@medusajs/framework/types';
 import { MedusaError } from '@medusajs/framework/utils';
 import axios, { AxiosInstance } from 'axios';
 import { 
-  IInventoryModuleService, 
+  IInventoryService, 
   IProductModuleService,
   IOrderModuleService,
   InventoryItemDTO, 
@@ -14,7 +14,7 @@ import { PrintfulProduct, PrintfulVariant, PrintfulOrder, PrintfulInventorySync 
 
 type InjectedDependencies = {
   logger: Logger;
-  [Modules.INVENTORY]: IInventoryModuleService;
+  [Modules.INVENTORY]: IInventoryService;
   [Modules.PRODUCT]: IProductModuleService;
   [Modules.ORDER]: IOrderModuleService;
 };
@@ -24,7 +24,7 @@ export class PrintfulService {
   
   protected readonly logger_: Logger;
   protected client: AxiosInstance;
-  protected readonly inventoryService_: IInventoryModuleService;
+  protected readonly inventoryService_: IInventoryService;
   protected readonly productService_: IProductModuleService;
   protected readonly orderService_: IOrderModuleService;
   protected apiKey: string;
@@ -285,7 +285,7 @@ export class PrintfulService {
     const options = this.extractOptionsFromPrintfulProduct(printfulProduct);
     const variants = this.mapPrintfulVariantsToMedusa(printfulProduct.sync_variants);
     
-    const product = await this.productService_.createProduct({
+    const product = await this.productService_.createProducts({
       title: printfulProduct.name,
       handle: printfulProduct.name.toLowerCase().replace(/\s+/g, '-'),
       description: printfulProduct.description || 'Imported from Printful',
@@ -314,7 +314,7 @@ export class PrintfulService {
   private async updateMedusaProduct(existingProduct: ProductDTO, printfulProduct: PrintfulProduct): Promise<ProductDTO> {
     // Implement update logic - this is complex due to variants and options
     // This is a simplified version
-    const updated = await this.productService_.updateProduct(existingProduct.id, {
+    const updated = await this.productService_.updateProducts(existingProduct.id, {
       description: printfulProduct.description || existingProduct.description,
       metadata: {
         ...existingProduct.metadata,
@@ -465,6 +465,5 @@ export class PrintfulService {
       }))
     };
   }
-}
 
 export default PrintfulService;

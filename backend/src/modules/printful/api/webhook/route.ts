@@ -1,7 +1,8 @@
+// src/modules/printful/api/webhook/route.ts
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
 import PrintfulService from "../../service";
 import { PrintfulWebhookEvent } from "../../types/printful-api";
-import { IFulfillmentModuleService, IOrderModuleService } from "@medusajs/framework/types";
+import { IFulfillmentService, IOrderService } from "@medusajs/framework/types";
 import { Modules } from "@medusajs/framework/utils";
 
 /**
@@ -12,8 +13,8 @@ export async function POST(
   res: MedusaResponse
 ): Promise<void> {
   const printfulService: PrintfulService = req.scope.resolve("printful-service");
-  const fulfillmentService: IFulfillmentModuleService = req.scope.resolve(Modules.FULFILLMENT);
-  const orderService: IOrderModuleService = req.scope.resolve(Modules.ORDER);
+  const fulfillmentService: IFulfillmentService = req.scope.resolve(Modules.FULFILLMENT);
+  const orderService: IOrderService = req.scope.resolve(Modules.ORDER);
   
   try {
     // Verify signature if provided
@@ -75,8 +76,8 @@ export async function POST(
  */
 async function handlePackageShipped(
   webhookEvent: PrintfulWebhookEvent,
-  orderService: IOrderModuleService,
-  fulfillmentService: IFulfillmentModuleService
+  orderService: IOrderService,
+  fulfillmentService: IFulfillmentService
 ): Promise<void> {
   const printfulOrder = webhookEvent.data.order;
   const medusaOrderId = printfulOrder.external_id;
@@ -90,9 +91,11 @@ async function handlePackageShipped(
       return;
     }
     
-    // Find the fulfillment for this order
+    // Find the fulfillment for this order - fixing the filter
     const fulfillments = await fulfillmentService.listFulfillments({
-      order_id: medusaOrderId
+      filter: {
+        order_id: { eq: medusaOrderId }
+      }
     });
     
     if (fulfillments.length === 0) {
@@ -100,19 +103,21 @@ async function handlePackageShipped(
       return;
     }
     
-    // Update the fulfillment status to shipped
-    // Note: This might need to be adjusted based on Medusa's fulfillment structure
+    // Update the fulfillment status to shipped - fixing property names
     for (const fulfillment of fulfillments) {
       await fulfillmentService.updateFulfillment(fulfillment.id, {
-        // Update relevant fields based on the webhook data
-        tracking_numbers: webhookEvent.data.tracking_number ? [webhookEvent.data.tracking_number] : undefined,
+        // Use data field for custom data
         data: {
           ...fulfillment.data,
           printful_shipment_id: webhookEvent.data.shipment_id,
           printful_carrier: webhookEvent.data.carrier,
-          printful_tracking_url: webhookEvent.data.tracking_url
+          printful_tracking_url: webhookEvent.data.tracking_url,
+          printful_tracking_number: webhookEvent.data.tracking_number
         }
       });
+      
+      // If you need to update tracking numbers, you'll need to use a different approach
+      // as the direct property isn't available. Consider adding it to the data object above.
     }
     
     // Optionally notify the customer about shipment

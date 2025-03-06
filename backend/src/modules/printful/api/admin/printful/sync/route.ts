@@ -1,11 +1,18 @@
+// src/modules/printful/api/admin/printful/sync/route.ts
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
 import PrintfulService from "../../../../service";
+
+// Add this interface to properly type the request body
+interface SyncRequestBody {
+  products?: boolean;
+  inventory?: boolean;
+}
 
 /**
  * Manual sync trigger for Printful products and inventory
  */
 export async function POST(
-  req: MedusaRequest,
+  req: MedusaRequest<{}, {}, SyncRequestBody>, // Properly typed request
   res: MedusaResponse
 ): Promise<void> {
   const printfulService: PrintfulService = req.scope.resolve("printful-service");

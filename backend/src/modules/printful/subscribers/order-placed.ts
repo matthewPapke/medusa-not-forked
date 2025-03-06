@@ -69,7 +69,7 @@ export default async function orderPlacedHandler({
     console.log(`Successfully created Printful order for Medusa order ${order.id}`);
     
     // Optionally update the order in Medusa with Printful order ID
-    await orderService.updateOrder(order.id, {
+    await orderService.updateOrders(order.id, {
       metadata: {
         ...order.metadata,
         printful_order_id: result.id.toString(),
