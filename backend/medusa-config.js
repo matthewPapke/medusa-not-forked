@@ -1,5 +1,4 @@
 import { loadEnv, Modules, defineConfig } from '@medusajs/utils';
-import { PRINTFUL_MODULE_KEY } from './src/modules/printful';
 
 
 import {
