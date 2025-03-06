@@ -11,7 +11,7 @@ export default async function orderPlacedHandler({
   container,
 }: SubscriberArgs<{ id: string }>) {
   // Get required services
-  const printfulService: PrintfulService = container.resolve("printful-service");
+  const printfulService: PrintfulService = container.resolve("printful");
   const orderService: IOrderModuleService = container.resolve(Modules.ORDER);
   
   // Skip if printful service isn't initialized

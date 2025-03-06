@@ -131,7 +131,6 @@ const medusaConfig = {
       },
     }] : []),
     {
-      key: PRINTFUL_SERVICE_KEY,
       resolve: './src/modules/printful',
       options: {
         // Any additional options your module needs

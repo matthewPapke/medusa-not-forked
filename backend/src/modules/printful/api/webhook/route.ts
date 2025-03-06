@@ -15,7 +15,7 @@ export async function POST(
   req: MedusaRequest,
   res: MedusaResponse
 ): Promise<void> {
-  const printfulService: PrintfulService = req.scope.resolve("printful-service");
+  const printfulService: PrintfulService = req.scope.resolve("printful");
   const fulfillmentService: IFulfillmentService = req.scope.resolve(Modules.FULFILLMENT);
   const orderService: IOrderService = req.scope.resolve(Modules.ORDER);
   

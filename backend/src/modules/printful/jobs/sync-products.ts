@@ -5,7 +5,7 @@ import { PrintfulService } from "../service";
  * Scheduled job to automatically sync products from Printful to Medusa
  */
 export default async function syncPrintfulProducts(container: MedusaContainer) {
-  const printfulService: PrintfulService = container.resolve("printful-service");
+  const printfulService: PrintfulService = container.resolve("printful");
   const logger = container.resolve("logger");
   
   // Skip if not initialized
