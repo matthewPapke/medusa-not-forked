@@ -1,4 +1,6 @@
 import { loadEnv, Modules, defineConfig } from '@medusajs/utils';
+import { PRINTFUL_SERVICE_KEY } from './src/modules/printful';
+
 import {
   ADMIN_CORS,
   AUTH_CORS,
@@ -127,7 +129,13 @@ const medusaConfig = {
           },
         ],
       },
-    }] : [])
+    }] : []),
+    {
+      resolve: './src/modules/printful',
+      options: {
+        // Any additional options your module needs
+      }
+    }
   ],
   plugins: [
   ...(MEILISEARCH_HOST && MEILISEARCH_ADMIN_KEY ? [{
