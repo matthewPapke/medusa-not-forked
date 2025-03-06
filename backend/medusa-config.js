@@ -150,12 +150,10 @@ const medusaConfig = {
         }
       }
     }] : []),
-  {
-    resolve: './src/plugins/printful',
-    options: {
-      // Any options
-    }
-  }
+    {
+      resolve: 'medusa-plugin-printful',
+      options: {}
+    },
   ]
 };
 
