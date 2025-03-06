@@ -12,7 +12,7 @@ interface SyncRequestBody {
  * Manual sync trigger for Printful products and inventory
  */
 export async function POST(
-  req: MedusaRequest<{}, {}, SyncRequestBody>, // Properly typed request
+  req: MedusaRequest,
   res: MedusaResponse
 ): Promise<void> {
   const printfulService: PrintfulService = req.scope.resolve("printful-service");

@@ -1,8 +1,8 @@
+// src/modules/printful/service.ts
 import { Logger } from '@medusajs/framework/types';
 import { MedusaError } from '@medusajs/framework/utils';
-import axios, { AxiosInstance } from 'axios';
 import { 
-  IInventoryService, 
+  IInventoryModuleService, 
   IProductModuleService,
   IOrderModuleService,
   InventoryItemDTO, 
@@ -14,7 +14,7 @@ import { PrintfulProduct, PrintfulVariant, PrintfulOrder, PrintfulInventorySync 
 
 type InjectedDependencies = {
   logger: Logger;
-  [Modules.INVENTORY]: IInventoryService;
+  [Modules.INVENTORY]: IInventoryModuleService;
   [Modules.PRODUCT]: IProductModuleService;
   [Modules.ORDER]: IOrderModuleService;
 };
@@ -23,8 +23,8 @@ export class PrintfulService {
   static identifier = 'printful';
   
   protected readonly logger_: Logger;
-  protected client: AxiosInstance;
-  protected readonly inventoryService_: IInventoryService;
+  protected client: any; // Changed from AxiosInstance to avoid axios dependency
+  protected readonly inventoryService_: IInventoryModuleService;
   protected readonly productService_: IProductModuleService;
   protected readonly orderService_: IOrderModuleService;
   protected apiKey: string;
@@ -47,13 +47,8 @@ export class PrintfulService {
     this.webhookSecret = process.env.PRINTFUL_WEBHOOK_SECRET || '';
     this.autoSyncInterval = parseInt(process.env.PRINTFUL_AUTO_SYNC_INTERVAL || '3600000', 10);
     
-    this.client = axios.create({
-      baseURL: 'https://api.printful.com',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    // Use node-fetch instead of axios
+    this.setupClient();
     
     if (this.apiKey) {
       this.isInitialized = true;
@@ -61,6 +56,38 @@ export class PrintfulService {
     } else {
       this.logger_.warn('Printful service not initialized: missing API key');
     }
+  }
+
+  private setupClient() {
+    // Create a simple client using fetch instead of axios
+    this.client = {
+      get: async (url: string) => {
+        const response = await fetch(`https://api.printful.com${url}`, {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!response.ok) {
+          throw new Error(`Printful API error: ${response.status} ${response.statusText}`);
+        }
+        return { data: await response.json() };
+      },
+      post: async (url: string, data: any) => {
+        const response = await fetch(`https://api.printful.com${url}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+          throw new Error(`Printful API error: ${response.status} ${response.statusText}`);
+        }
+        return { data: await response.json() };
+      }
+    };
   }
   
   /**
@@ -71,17 +98,11 @@ export class PrintfulService {
   }
   
   /**
-   * Set API credentials
+   * Set API key
    */
   setApiKey(apiKey: string): void {
     this.apiKey = apiKey;
-    this.client = axios.create({
-      baseURL: 'https://api.printful.com',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    this.setupClient();
     this.isInitialized = true;
     this.logger_.info('Printful API key updated');
   }
@@ -261,15 +282,17 @@ export class PrintfulService {
    */
   private async findExistingProduct(printfulProduct: PrintfulProduct): Promise<ProductDTO | null> {
     try {
-      const products = await this.productService_.listAndCountProducts({
-        query: {
-          // Use appropriate filter mechanism depending on Medusa 2.0's API
-          metadata: JSON.stringify({ printful_id: printfulProduct.id.toString() })
-        }
-      });
+      // Use a simple approach with listing all products and filtering in memory
+      const products = await this.productService_.listAndCountProducts({});
       
-      if (products[0].length > 0) {
-        return products[0][0];
+      // Find products with matching metadata
+      const matchingProducts = products[0].filter(p => 
+        p.metadata && 
+        p.metadata.printful_id === printfulProduct.id.toString()
+      );
+      
+      if (matchingProducts.length > 0) {
+        return matchingProducts[0];
       }
       
       return null;
@@ -286,29 +309,27 @@ export class PrintfulService {
     const options = this.extractOptionsFromPrintfulProduct(printfulProduct);
     const variants = this.mapPrintfulVariantsToMedusa(printfulProduct.sync_variants);
     
-    const products = await this.productService_.createProducts([{
+    // Create product data without 'query' field
+    const productData = {
       title: printfulProduct.name,
       handle: printfulProduct.name.toLowerCase().replace(/\s+/g, '-'),
       description: printfulProduct.description || 'Imported from Printful',
       status: ProductStatus.PUBLISHED,
       options,
       variants,
-      // Add images
       images: printfulProduct.thumbnail_url 
         ? [{ url: printfulProduct.thumbnail_url }] 
         : [],
-      query: {
-        // Use appropriate filter mechanism depending on Medusa 2.0's API
-        metadata: JSON.stringify({
-          printful_id: printfulProduct.id.toString(),
-          printful_external_id: printfulProduct.external_id,
-          printful_sync_product_id: printfulProduct.sync_product_id.toString(),
-          printful_last_synced: new Date().toISOString()
-        })
+      metadata: {
+        printful_id: printfulProduct.id.toString(),
+        printful_external_id: printfulProduct.external_id,
+        printful_sync_product_id: printfulProduct.sync_product_id.toString(),
+        printful_last_synced: new Date().toISOString()
       }
-    }], {});
-
-    const product = products[0]; // Get first product
+    };
+    
+    const products = await this.productService_.createProducts([productData], {});
+    const product = products[0];
     
     this.logger_.info(`Created product in Medusa with ID ${product.id} from Printful ID ${printfulProduct.id}`);
     return product;
@@ -319,14 +340,13 @@ export class PrintfulService {
    */
   private async updateMedusaProduct(existingProduct: ProductDTO, printfulProduct: PrintfulProduct): Promise<ProductDTO> {
     // Implement update logic - this is complex due to variants and options
-    // This is a simplified version
     const updated = await this.productService_.updateProducts(existingProduct.id, {
       description: printfulProduct.description || existingProduct.description,
       metadata: {
         ...existingProduct.metadata,
         printful_last_synced: new Date().toISOString()
       }
-    });
+    }, {});
     
     this.logger_.info(`Updated product in Medusa with ID ${existingProduct.id} from Printful ID ${printfulProduct.id}`);
     return updated;
@@ -337,18 +357,13 @@ export class PrintfulService {
    */
   private async findInventoryItemBySku(sku: string): Promise<InventoryItemDTO | null> {
     try {
-      // Search for inventory item with matching SKU
-      const inventoryItems = await this.inventoryService_.listInventoryItems({
-        query: {
-          sku: sku
-        }
-      });
+      // List all inventory items and filter in memory (simplified approach)
+      const inventoryItems = await this.inventoryService_.listInventoryItems({});
       
-      if (inventoryItems.length > 0) {
-        return inventoryItems[0];
-      }
+      // Find the one with matching SKU
+      const matchingItem = inventoryItems.find(item => item.sku === sku);
       
-      return null;
+      return matchingItem || null;
     } catch (error) {
       this.logger_.error(`Failed to find inventory item with SKU ${sku}: ${error.message}`);
       return null;
@@ -472,7 +487,4 @@ export class PrintfulService {
       }))
     };
   }
-
-
-// To this:
-export { PrintfulService };
+}
