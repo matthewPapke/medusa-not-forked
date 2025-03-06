@@ -1,52 +1,63 @@
-// src/modules/printful/api/admin/printful/settings/route.ts
+// src/modules/printful/api/admin/printful/sync/route.ts
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
 import PrintfulService from "../../../../service";
 
-// Add this interface to properly type the request body
-interface SettingsRequestBody {
-  apiKey: string;
+// Define a type for the request body
+interface SyncRequestBody {
+  products?: boolean;
+  inventory?: boolean;
 }
 
 /**
- * Update Printful integration settings
+ * Manual sync trigger for Printful products and inventory
  */
 export async function POST(
-  req: MedusaRequest<SettingsRequestBody>,
+  req: MedusaRequest,
   res: MedusaResponse
 ): Promise<void> {
   const printfulService: PrintfulService = req.scope.resolve("printful");
   const logger = req.scope.resolve("logger");
 
+  // Check if service is ready
+  if (!printfulService.isReady()) {
+    res.status(400).json({
+      success: false,
+      message: "Printful service is not initialized. Please configure API key first."
+    });
+    return;
+  }
+
   try {
-    const { apiKey } = req.body;
-
-    if (!apiKey) {
-      res.status(400).json({
-        success: false,
-        message: "API key is required"
-      });
-      return;
+    // Use type assertion to properly type the request body
+    const body = req.body as SyncRequestBody;
+    const products = body.products !== false; // Default to true if not specified
+    const inventory = body.inventory !== false; // Default to true if not specified
+    
+    const results: Record<string, any> = {};
+    
+    // Sync products if requested
+    if (products) {
+      logger.info("Starting manual Printful product sync");
+      const productResult = await printfulService.syncProducts();
+      results.products = productResult;
     }
-
-    // Update API key
-    printfulService.setApiKey(apiKey);
-    logger.info("Printful API key updated");
-
-    // Test connection by getting store info
-    const storeInfo = await printfulService.getStoreInfo();
-
+    
+    // Sync inventory if requested
+    if (inventory) {
+      logger.info("Starting manual Printful inventory sync");
+      const inventoryResult = await printfulService.syncInventory();
+      results.inventory = inventoryResult;
+    }
+    
     res.status(200).json({
       success: true,
-      data: {
-        initialized: true,
-        store: storeInfo
-      }
+      results
     });
   } catch (error) {
-    logger.error(`Error updating Printful settings: ${error.message}`);
+    logger.error(`Error in manual Printful sync: ${error.message}`);
     res.status(500).json({
       success: false,
-      message: `Error updating Printful settings: ${error.message}`
+      message: `Error syncing with Printful: ${error.message}`
     });
   }
 }
