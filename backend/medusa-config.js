@@ -49,11 +49,6 @@ const medusaConfig = {
   },
   modules: [
     {
-      key: 'printful', // A unique key for this module
-      resolve: './src/modules/printful',
-      options: {}
-    },
-    {
       key: Modules.FILE,
       resolve: '@medusajs/file',
       options: {
@@ -155,7 +150,13 @@ const medusaConfig = {
           }
         }
       }
-    }] : [])
+    }] : []),
+  {
+    resolve: './src/plugins/printful',
+    options: {
+      // Any options
+    }
+  }
   ]
 };
 
