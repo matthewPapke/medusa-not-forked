@@ -1,10 +1,13 @@
-import { ModuleRegistrationName } from '@medusajs/utils';
+import { ModuleProviderExports } from '@medusajs/framework/types';
 import { PrintfulService } from './service';
 
-export const PRINTFUL_MODULE_KEY = ModuleRegistrationName.PRINTFUL || 'printful';
+// This needs to match exactly what you use in medusa-config.js
+export const PRINTFUL_MODULE_KEY = 'printful';
 
-export default {
-  scope: 'SINGLETON',
-  resolve: () => PrintfulService,
-  dependencies: []
+const services = [PrintfulService];
+
+const providerExport: ModuleProviderExports = {
+  services,
 };
+
+export default providerExport;
