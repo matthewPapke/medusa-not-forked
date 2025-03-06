@@ -2,12 +2,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
 import PrintfulService from "../../../../service";
 
-// Define a type for the request body
-interface SyncRequestBody {
-  products?: boolean;
-  inventory?: boolean;
-}
-
 /**
  * Manual sync trigger for Printful products and inventory
  */
@@ -28,22 +22,21 @@ export async function POST(
   }
 
   try {
-    // Use type assertion to properly type the request body
-    const body = req.body as SyncRequestBody;
-    const products = body.products !== false; // Default to true if not specified
-    const inventory = body.inventory !== false; // Default to true if not specified
+    // Access properties safely without destructuring
+    const doSyncProducts = req.body.products !== false; // Default to true
+    const doSyncInventory = req.body.inventory !== false; // Default to true
     
     const results: Record<string, any> = {};
     
     // Sync products if requested
-    if (products) {
+    if (doSyncProducts) {
       logger.info("Starting manual Printful product sync");
       const productResult = await printfulService.syncProducts();
       results.products = productResult;
     }
     
     // Sync inventory if requested
-    if (inventory) {
+    if (doSyncInventory) {
       logger.info("Starting manual Printful inventory sync");
       const inventoryResult = await printfulService.syncInventory();
       results.inventory = inventoryResult;
