@@ -286,7 +286,7 @@ export class PrintfulService {
     const options = this.extractOptionsFromPrintfulProduct(printfulProduct);
     const variants = this.mapPrintfulVariantsToMedusa(printfulProduct.sync_variants);
     
-    const product = await this.productService_.createProducts({
+    const products = await this.productService_.createProducts([{
       title: printfulProduct.name,
       handle: printfulProduct.name.toLowerCase().replace(/\s+/g, '-'),
       description: printfulProduct.description || 'Imported from Printful',
@@ -306,7 +306,9 @@ export class PrintfulService {
           printful_last_synced: new Date().toISOString()
         })
       }
-    });
+    }], {});
+
+    const product = products[0]; // Get first product
     
     this.logger_.info(`Created product in Medusa with ID ${product.id} from Printful ID ${printfulProduct.id}`);
     return product;
@@ -370,6 +372,8 @@ export class PrintfulService {
       for (const level of levels) {
         await this.inventoryService_.updateInventoryLevels([{
           id: level.id,
+          inventory_item_id: level.inventory_item_id,
+          location_id: level.location_id,
           stocked_quantity: totalAvailable
         }], {});
       }

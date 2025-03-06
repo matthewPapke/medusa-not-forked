@@ -97,7 +97,7 @@ async function handlePackageShipped(
     // Find the fulfillment for this order - fixing the filter
     const fulfillments = await fulfillmentService.listFulfillments({
       filter: {
-        order_id: { eq: medusaOrderId }
+        id: medusaOrderId
       }
     });
     
