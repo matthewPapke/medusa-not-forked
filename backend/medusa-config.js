@@ -131,10 +131,9 @@ const medusaConfig = {
       },
     }] : []),
     {
+      key: 'printful',  // This is the module registration name
       resolve: './src/modules/printful',
-      options: {
-        // Any additional options your module needs
-      }
+      options: {}
     }
   ],
   plugins: [

@@ -1,8 +1,10 @@
 import { ModuleRegistrationName } from '@medusajs/utils';
 import { PrintfulService } from './service';
 
-// Export the service directly
+export const PRINTFUL_MODULE_KEY = ModuleRegistrationName.PRINTFUL || 'printful';
+
 export default {
-  service: PrintfulService,
-  scope: 'SINGLETON'
+  scope: 'SINGLETON',
+  resolve: () => PrintfulService,
+  dependencies: []
 };
