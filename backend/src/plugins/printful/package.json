@@ -1,0 +1,13 @@
+{
+  "name": "medusa-plugin-printful",
+  "version": "1.0.0",
+  "description": "Printful integration for Medusa",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/medusa-plugin-printful"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {}
+}
