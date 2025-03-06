@@ -1,6 +1,6 @@
 // src/modules/printful/api/admin/printful/sync/route.ts
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
-import { PrintfulService } from "../../../../service";
+import PrintfulService from "../../../../service";
 
 // Add this interface to properly type the request body
 interface SyncRequestBody {
@@ -17,6 +17,9 @@ export async function POST(
 ): Promise<void> {
   const printfulService: PrintfulService = req.scope.resolve("printful");
   const logger = req.scope.resolve("logger");
+
+  const body = req.body as SyncRequestBody;
+  const { products = true, inventory = true } = body;
 
   // Check if service is ready
   if (!printfulService.isReady()) {

@@ -1,6 +1,6 @@
 // src/modules/printful/api/webhook/route.ts
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
-import { PrintfulService } from "../../service";
+import PrintfulService from "../../service";
 import { PrintfulWebhookEvent } from "../../types/printful-api";
 import { 
   IFulfillmentModuleService as IFulfillmentService,
@@ -96,7 +96,7 @@ async function handlePackageShipped(
     
     // Find the fulfillment for this order - fixing the filter
     const fulfillments = await fulfillmentService.listFulfillments({
-      order_id: medusaOrderId
+      id: medusaOrderId
     });
     
     if (fulfillments.length === 0) {

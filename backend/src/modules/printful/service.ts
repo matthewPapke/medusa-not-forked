@@ -2,7 +2,7 @@
 import { Logger } from '@medusajs/framework/types';
 import { MedusaError } from '@medusajs/framework/utils';
 import { 
-  IInventoryModuleService, 
+  IInventoryService, 
   IProductModuleService,
   IOrderModuleService,
   InventoryItemDTO, 
@@ -14,7 +14,7 @@ import { PrintfulProduct, PrintfulVariant, PrintfulOrder, PrintfulInventorySync 
 
 type InjectedDependencies = {
   logger: Logger;
-  [Modules.INVENTORY]: IInventoryModuleService;
+  [Modules.INVENTORY]: IInventoryService;
   [Modules.PRODUCT]: IProductModuleService;
   [Modules.ORDER]: IOrderModuleService;
 };
@@ -24,7 +24,7 @@ class PrintfulService {
 
   protected readonly logger_: Logger;
   protected client: any; // Changed from AxiosInstance to avoid axios dependency
-  protected readonly inventoryService_: IInventoryModuleService;
+  protected readonly inventoryService_: IInventoryService;
   protected readonly productService_: IProductModuleService;
   protected readonly orderService_: IOrderModuleService;
   protected apiKey: string;
@@ -489,4 +489,4 @@ class PrintfulService {
   }
 }
 
-export default PrintfulService
+export default PrintfulService;

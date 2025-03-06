@@ -1,7 +1,7 @@
 import { SubscriberArgs, SubscriberConfig } from '@medusajs/framework';
 import { IOrderModuleService } from '@medusajs/framework/types';
 import { Modules } from '@medusajs/framework/utils';
-import { PrintfulService } from '../service';
+import PrintfulService from '../service';
 
 /**
  * Subscriber that forwards new orders to Printful when they're placed in Medusa
