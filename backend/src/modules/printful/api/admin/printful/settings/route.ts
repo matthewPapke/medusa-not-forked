@@ -1,9 +1,45 @@
-// src/modules/printful/api/admin/printful/sync/route.ts
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
 import PrintfulService from "../../../../service";
 
 /**
- * Manual sync trigger for Printful products and inventory
+ * Get Printful integration settings
+ */
+export async function GET(
+  req: MedusaRequest,
+  res: MedusaResponse
+): Promise<void> {
+  const printfulService: PrintfulService = req.scope.resolve("printful");
+
+  const isInitialized = printfulService.isReady();
+
+  try {
+    // Get store info if service is initialized
+    let storeInfo = null;
+    if (isInitialized) {
+      storeInfo = await printfulService.getStoreInfo();
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        initialized: isInitialized,
+        store: storeInfo,
+        config: {
+          syncInterval: process.env.PRINTFUL_AUTO_SYNC_INTERVAL || "3600000",
+          webhookConfigured: !!process.env.PRINTFUL_WEBHOOK_SECRET
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: `Error retrieving Printful settings: ${error.message}`
+    });
+  }
+}
+
+/**
+ * Update Printful integration settings
  */
 export async function POST(
   req: MedusaRequest,
@@ -12,45 +48,37 @@ export async function POST(
   const printfulService: PrintfulService = req.scope.resolve("printful");
   const logger = req.scope.resolve("logger");
 
-  // Check if service is ready
-  if (!printfulService.isReady()) {
-    res.status(400).json({
-      success: false,
-      message: "Printful service is not initialized. Please configure API key first."
-    });
-    return;
-  }
-
   try {
-    // Access properties directly with defaults
-    const doSyncProducts = typeof req.body.products !== 'undefined' ? req.body.products : true;
-    const doSyncInventory = typeof req.body.inventory !== 'undefined' ? req.body.inventory : true;
-    
-    const results: Record<string, any> = {};
-    
-    // Sync products if requested
-    if (doSyncProducts) {
-      logger.info("Starting manual Printful product sync");
-      const productResult = await printfulService.syncProducts();
-      results.products = productResult;
+    // Use explicit casting to access apiKey
+    const apiKey = (req.body as any).apiKey;
+
+    if (!apiKey) {
+      res.status(400).json({
+        success: false,
+        message: "API key is required"
+      });
+      return;
     }
-    
-    // Sync inventory if requested
-    if (doSyncInventory) {
-      logger.info("Starting manual Printful inventory sync");
-      const inventoryResult = await printfulService.syncInventory();
-      results.inventory = inventoryResult;
-    }
-    
+
+    // Update API key
+    printfulService.setApiKey(apiKey);
+    logger.info("Printful API key updated");
+
+    // Test connection by getting store info
+    const storeInfo = await printfulService.getStoreInfo();
+
     res.status(200).json({
       success: true,
-      results
+      data: {
+        initialized: true,
+        store: storeInfo
+      }
     });
   } catch (error) {
-    logger.error(`Error in manual Printful sync: ${error.message}`);
+    logger.error(`Error updating Printful settings: ${error.message}`);
     res.status(500).json({
       success: false,
-      message: `Error syncing with Printful: ${error.message}`
+      message: `Error updating Printful settings: ${error.message}`
     });
   }
 }

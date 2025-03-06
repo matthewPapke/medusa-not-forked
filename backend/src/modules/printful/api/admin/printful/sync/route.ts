@@ -1,12 +1,5 @@
-// src/modules/printful/api/admin/printful/sync/route.ts
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
 import PrintfulService from "../../../../service";
-
-// Add this interface to properly type the request body
-interface SyncRequestBody {
-  products?: boolean;
-  inventory?: boolean;
-}
 
 /**
  * Manual sync trigger for Printful products and inventory
@@ -18,9 +11,6 @@ export async function POST(
   const printfulService: PrintfulService = req.scope.resolve("printful");
   const logger = req.scope.resolve("logger");
 
-  const body = req.body as SyncRequestBody;
-  const { products = true, inventory = true } = body;
-
   // Check if service is ready
   if (!printfulService.isReady()) {
     res.status(400).json({
@@ -31,20 +21,22 @@ export async function POST(
   }
 
   try {
-    // Determine what to sync
-    const { products = true, inventory = true } = req.body;
+    // Use explicit any type to avoid TypeScript errors
+    const body = req.body as any;
+    const doSyncProducts = body.products !== false; // Default to true
+    const doSyncInventory = body.inventory !== false; // Default to true
     
     const results: Record<string, any> = {};
     
     // Sync products if requested
-    if (products) {
+    if (doSyncProducts) {
       logger.info("Starting manual Printful product sync");
       const productResult = await printfulService.syncProducts();
       results.products = productResult;
     }
     
     // Sync inventory if requested
-    if (inventory) {
+    if (doSyncInventory) {
       logger.info("Starting manual Printful inventory sync");
       const inventoryResult = await printfulService.syncInventory();
       results.inventory = inventoryResult;
