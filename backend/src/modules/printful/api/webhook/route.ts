@@ -1,8 +1,11 @@
 // src/modules/printful/api/webhook/route.ts
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
-import PrintfulService from "../../service";
+import { PrintfulService } from "../../service";
 import { PrintfulWebhookEvent } from "../../types/printful-api";
-import { IFulfillmentService, IOrderService } from "@medusajs/framework/types";
+import { 
+  IFulfillmentModuleService as IFulfillmentService,
+  IOrderModuleService as IOrderService
+} from "@medusajs/framework/types";
 import { Modules } from "@medusajs/framework/utils";
 
 /**

@@ -1,6 +1,6 @@
 // src/modules/printful/api/admin/printful/sync/route.ts
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
-import PrintfulService from "../../../../service";
+import { PrintfulService } from "../../../../service";
 
 // Add this interface to properly type the request body
 interface SyncRequestBody {

@@ -262,8 +262,9 @@ export class PrintfulService {
   private async findExistingProduct(printfulProduct: PrintfulProduct): Promise<ProductDTO | null> {
     try {
       const products = await this.productService_.listAndCountProducts({
-        metadata: {
-          printful_id: printfulProduct.id.toString()
+        query: {
+          // Use appropriate filter mechanism depending on Medusa 2.0's API
+          metadata: JSON.stringify({ printful_id: printfulProduct.id.toString() })
         }
       });
       
@@ -296,11 +297,14 @@ export class PrintfulService {
       images: printfulProduct.thumbnail_url 
         ? [{ url: printfulProduct.thumbnail_url }] 
         : [],
-      metadata: {
-        printful_id: printfulProduct.id.toString(),
-        printful_external_id: printfulProduct.external_id,
-        printful_sync_product_id: printfulProduct.sync_product_id.toString(),
-        printful_last_synced: new Date().toISOString()
+      query: {
+        // Use appropriate filter mechanism depending on Medusa 2.0's API
+        metadata: JSON.stringify({
+          printful_id: printfulProduct.id.toString(),
+          printful_external_id: printfulProduct.external_id,
+          printful_sync_product_id: printfulProduct.sync_product_id.toString(),
+          printful_last_synced: new Date().toISOString()
+        })
       }
     });
     
@@ -333,10 +337,8 @@ export class PrintfulService {
     try {
       // Search for inventory item with matching SKU
       const inventoryItems = await this.inventoryService_.listInventoryItems({
-        filter: {
-          sku: {
-            eq: sku
-          }
+        query: {
+          sku: sku
         }
       });
       
@@ -366,9 +368,10 @@ export class PrintfulService {
       
       // Update each level
       for (const level of levels) {
-        await this.inventoryService_.updateInventoryLevel(level.id, {
-          stocked_quantity: totalAvailable,
-        });
+        await this.inventoryService_.updateInventoryLevels([{
+          id: level.id,
+          stocked_quantity: totalAvailable
+        }], {});
       }
       
       this.logger_.info(`Updated inventory levels for ${inventoryItem.sku} to ${totalAvailable}`);
@@ -466,4 +469,6 @@ export class PrintfulService {
     };
   }
 
-export default PrintfulService;
+
+// To this:
+export { PrintfulService };

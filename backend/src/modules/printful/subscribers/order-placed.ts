@@ -1,7 +1,7 @@
 import { SubscriberArgs, SubscriberConfig } from '@medusajs/framework';
 import { IOrderModuleService } from '@medusajs/framework/types';
 import { Modules } from '@medusajs/framework/utils';
-import PrintfulService from '../service';
+import { PrintfulService } from '../service';
 
 /**
  * Subscriber that forwards new orders to Printful when they're placed in Medusa
@@ -35,7 +35,6 @@ export default async function orderPlacedHandler({
     // Check if this order should be sent to Printful
     // Only process orders that contain Printful products
     const containsPrintfulProducts = order.items.some(item => 
-      item.variant?.metadata?.printful_variant_id || 
       item.metadata?.printful_variant_id
     );
     
@@ -46,7 +45,6 @@ export default async function orderPlacedHandler({
     
     // Filter out non-Printful products
     const printfulItems = order.items.filter(item => 
-      item.variant?.metadata?.printful_variant_id || 
       item.metadata?.printful_variant_id
     );
     

@@ -1,6 +1,6 @@
 // src/modules/printful/api/admin/printful/settings/route.ts
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework";
-import PrintfulService from "../../../../service";
+import { PrintfulService } from "../../../../service";
 
 // Add this interface to properly type the request body
 interface SettingsRequestBody {
@@ -11,7 +11,7 @@ interface SettingsRequestBody {
  * Update Printful integration settings
  */
 export async function POST(
-  req: MedusaRequest<{}, {}, SettingsRequestBody>, // Properly typed request
+  req: MedusaRequest<SettingsRequestBody>,
   res: MedusaResponse
 ): Promise<void> {
   const printfulService: PrintfulService = req.scope.resolve("printful-service");
