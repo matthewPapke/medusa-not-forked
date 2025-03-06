@@ -22,9 +22,10 @@ export async function POST(
   }
 
   try {
-    // Access properties safely without destructuring
-    const doSyncProducts = req.body.products !== false; // Default to true
-    const doSyncInventory = req.body.inventory !== false; // Default to true
+    // Use explicit any type to avoid TypeScript errors
+    const body = req.body as any;
+    const doSyncProducts = body.products !== false; // Default to true
+    const doSyncInventory = body.inventory !== false; // Default to true
     
     const results: Record<string, any> = {};
     
