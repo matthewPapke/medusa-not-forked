@@ -20,7 +20,7 @@ type InjectedDependencies = {
 };
 
 class PrintfulService {
-  static identifier = 'printful';  
+  static identifier = 'printful';
 
   protected readonly logger_: Logger;
   protected client: any; // Changed from AxiosInstance to avoid axios dependency

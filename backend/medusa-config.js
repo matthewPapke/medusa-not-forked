@@ -49,7 +49,7 @@ const medusaConfig = {
   },
   modules: [
     {
-      key: 'printful-module', // A unique key for this module
+      key: PRINTFUL_MODULE_KEY, // A unique key for this module
       resolve: './src/modules/printful',
       options: {}
     },
